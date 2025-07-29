@@ -1,4 +1,4 @@
-# A2A Protocol Movie Agent
+# A2A Protocol Multi-Agent System
 
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)]()
 [![Maintaner](https://img.shields.io/static/v1?label=Oleksandr%20Samoilenko&message=Maintainer&color=red)](mailto:oleksandr.samoilenko@extrawest.com)
@@ -6,18 +6,28 @@
 ![GitHub license](https://img.shields.io/github/license/Naereen/StrapDown.js.svg)
 ![GitHub release](https://img.shields.io/badge/release-v1.0.0-blue)
 
-A sophisticated movie information chatbot built using the Agent-to-Agent (A2A) protocol with Google's Genkit AI framework. This project demonstrates advanced AI agent capabilities with real-time movie data retrieval, quote generation, and interactive conversation management through both server APIs and command-line interface.
+A sophisticated multi-agent system built using the Agent-to-Agent (A2A) protocol with Google's Genkit AI framework. This project demonstrates advanced AI agent coordination capabilities with specialized agents for movie information retrieval, quote generation, and intelligent request routing through a multiagent coordinator.
 
 ## 🚀 Features
 
+-   **Multi-Agent Architecture**: Coordinated system with specialized agents for different tasks
 -   **Intelligent Movie Search**: Advanced movie information retrieval using TMDB API
 -   **Actor & People Search**: Comprehensive database of actors, directors, and film industry professionals
--   **Movie Quote Integration**: Contextual movie quotes from extensive quote database
+-   **Dedicated Quote Agent**: Specialized agent for contextual movie quotes from extensive database
+-   **Smart Request Routing**: Multiagent coordinator that intelligently routes requests to appropriate agents
 -   **A2A Protocol Implementation**: Modern agent-to-agent communication protocol
 -   **Streaming Responses**: Real-time message streaming for immediate feedback
 -   **Context Management**: Persistent conversation context across multiple interactions
--   **Command-Line Interface**: Terminal-based chat client for easy interaction
--   **RESTful API**: Express.js server with A2A protocol endpoints
+-   **Command-Line Interface**: Terminal-based chat client for easy interaction with any agent
+-   **RESTful APIs**: Express.js servers with A2A protocol endpoints for each agent
+
+## 🏗 System Architecture
+
+This multi-agent system consists of three specialized agents:
+
+1. **Movie Agent** (Port 41241) - Handles movie information, actor details, plots, recommendations
+2. **Quotes Agent** (Port 41242) - Specialized in finding and providing movie quotes
+3. **Multiagent Coordinator** (Port 41240) - Intelligently routes requests between agents and combines responses
 
 ## 🛠 Technology Stack
 
@@ -64,11 +74,14 @@ A sophisticated movie information chatbot built using the Agent-to-Agent (A2A) p
 
 3. Set up environment variables:
     ```bash
-    export GEMINI_API_KEY=<your_gemini_api_key>
-    export TMDB_API_KEY=<your_tmdb_api_key>
+    # Rename .env_example file to .env and replace credentials
+    cp .env_example .env
+    # Edit .env file with your API keys:
+    # TMDB_API_KEY=<your-api-key>
+    # GEMINI_API_KEY=<your-api-key>
     ```
 
-### Running the Application
+### Running the Multi-Agent System
 
 1. Start the Movie Agent server:
 
@@ -78,9 +91,26 @@ A sophisticated movie information chatbot built using the Agent-to-Agent (A2A) p
 
     The server will start on `http://localhost:41241`
 
-2. In a separate terminal, start the CLI client:
+2. Start the Quotes Agent server:
+
     ```bash
-    npm run a2a:cli
+    npm run agents:quotes-agent
+    ```
+
+    The server will start on `http://localhost:41242`
+
+3. Start the Multiagent Coordinator:
+
+    ```bash
+    npm run agents:multiagent
+    ```
+
+    The server will start on `http://localhost:41240`
+
+4. In a separate terminal, start the CLI client:
+
+    ```bash
+       npm run a2a:cli
     ```
 
 ## 🏗 Project Structure
@@ -88,24 +118,31 @@ A sophisticated movie information chatbot built using the Agent-to-Agent (A2A) p
 ```
 .
 ├── src/
-│   ├── agents/
-│   │   ├── movie-agent/
-│   │   │   ├── index.ts              # Main agent server implementation
-│   │   │   ├── genkit.ts             # Google Genkit AI configuration
-│   │   │   ├── tools.ts              # AI tools (movie search, people search, quotes)
-│   │   │   ├── tmdb.ts               # TMDB API integration
-│   │   │   ├── movie_agent.prompt    # AI agent prompt template
-│   │   │   └── README.md             # Agent-specific documentation
-│   │   └── README.md                 # Agents overview
-│   └── cli.ts                        # Command-line interface client
-├── package.json                      # Node.js dependencies and scripts
-├── tsconfig.json                     # TypeScript configuration
-└── README.md                         # Project documentation
+│ ├── agents/
+│ │ ├── movie-agent/
+│ │ │ ├── index.ts                # Movie agent server implementation
+│ │ │ ├── genkit.ts               # Google Genkit AI configuration
+│ │ │ ├── tools.ts                # Movie & people search tools
+│ │ │ ├── tmdb.ts                 # TMDB API integration
+│ │ │ ├── movie_agent.prompt      # Movie agent prompt template
+│ │ ├── quotes-agent/
+│ │ │ ├── index.ts                # Quotes agent server implementation
+│ │ │ ├── genkit.ts               # Google Genkit AI configuration
+│ │ │ ├── tools.ts                # Quote search tools
+│ │ │ ├── quotes_agent.prompt     # Quotes agent prompt template
+│ │ ├── multiagent/
+│ │ │ ├── index.ts                # Multiagent coordinator implementation
+│ │ └── README.md                 # Agents overview
+│ └── cli.ts                      # Command-line interface client
+├── .env_example                  # Environment variables template
+├── package.json                  # Node.js dependencies and scripts
+├── tsconfig.json                 # TypeScript configuration
+└── README.md                     # Project documentation
 ```
 
-## 📱 Features Overview
+## 📱 Agent Capabilities
 
-### Movie Agent Capabilities
+### Movie Agent (Port 41241)
 
 -   **Movie Information Retrieval**: Search for movies by title with detailed information including:
     -   Plot summaries and release dates
@@ -116,90 +153,63 @@ A sophisticated movie information chatbot built using the Agent-to-Agent (A2A) p
     -   Biographical information
     -   Filmography and known works
     -   Profile images and career highlights
--   **Quote Integration**: Contextual movie quotes related to:
-    -   Specific movies being discussed
-    -   Actors and their memorable lines
-    -   Random inspirational movie quotes
 
-### A2A Protocol Features
+### Quotes Agent (Port 41242)
 
--   **Task Management**: Advanced task lifecycle with states:
+-   **Quote Search**: Specialized quote retrieval including:
+    -   Quotes by movie title
+    -   Quotes by actor name
+    -   Themed movie quotes
+    -   Properly attributed quotes with character information
 
-    -   `submitted` → `working` → `completed`/`input-required`/`failed`
-    -   Task cancellation and error handling
-    -   Context preservation across interactions
+### Multiagent Coordinator (Port 41240)
 
--   **Message Streaming**: Real-time communication with:
-
-    -   Status updates during processing
-    -   Artifact delivery for complex responses
-    -   Event-driven architecture
-
--   **Context Awareness**: Intelligent conversation management:
-    -   Multi-turn dialogue support
-    -   Message history persistence
-    -   Context-aware responses
+-   **Intelligent Routing**: Smart request distribution based on content analysis
+-   **Multi-Agent Requests**: Combines responses from multiple agents
+-   **Context Management**: Maintains conversation context across agent interactions
 
 ## 🔌 API Endpoints
 
-### A2A Protocol Endpoints
+### A2A Protocol Endpoints (All Agents)
 
 -   `GET /.well-known/agent.json` - Agent card information
 -   `POST /a2a/messages` - Send message to agent
 -   `GET /a2a/messages/stream` - Streaming message interface
 -   `POST /a2a/tasks/{taskId}/cancel` - Cancel active task
 
-### Agent Card Information
+### Agent-Specific Endpoints
 
-```json
-{
-    "name": "Movie Agent",
-    "description": "An agent that can answer questions about movies and actors using TMDB",
-    "version": "0.0.2",
-    "capabilities": {
-        "streaming": true,
-        "stateTransitionHistory": true
-    },
-    "skills": [
-        {
-            "id": "general_movie_chat",
-            "name": "General Movie Chat",
-            "examples": [
-                "Tell me about the plot of Inception",
-                "Find action movies starring Keanu Reeves",
-                "Who directed The Matrix?"
-            ]
-        }
-    ]
-}
-```
+-   **Movie Agent**: `http://localhost:41241`
+-   **Quotes Agent**: `http://localhost:41242`
+-   **Multiagent Coordinator**: `http://localhost:41240`
 
 ## 💬 Usage Examples
 
 ### Command Line Interface
 
 ```bash
-# Start a new conversation
+# Movie-specific queries (via Movie Agent or Multiagent)
 Movie Agent > You: Tell me about Inception
-
-# Search for specific actor
 Movie Agent > You: What movies has Leonardo DiCaprio been in?
 
-# Get movie quotes
-Movie Agent > You: Give me some quotes from The Matrix
+# Quote-specific queries (via Quotes Agent or Multiagent)
+Quotes Agent > You: Give me quotes from The Matrix
+Quotes Agent > You: What are some famous quotes by Tom Hanks?
 
-# Use special commands
-Movie Agent > You: /new      # Start new session
-Movie Agent > You: /exit     # Quit application
+# Multi-agent queries (via Multiagent Coordinator)
+Multiagent > You: Tell me about The Dark Knight and give me quotes from it
+Multiagent > You: What are Christopher Nolan's best movies and famous quotes from them?
+
+# Special commands (all agents)
+Agent > You: /new      # Start new session
+Agent > You: /exit     # Quit application
 ```
 
-### Conversation Flow
+### Request Routing Examples
 
-1. **User Message**: Send question about movies/actors
-2. **Agent Processing**: AI searches TMDB and quote databases
-3. **Tool Execution**: Parallel function calls for comprehensive data
-4. **Response Generation**: AI synthesizes information with quotes
-5. **Context Preservation**: Conversation history maintained for follow-ups
+-   **Movie Agent Routes**: Movie plots, actor filmographies, director information, recommendations
+-   **Quotes Agent Routes**: Movie quotes by title, quotes by actor, memorable movie lines
+-   **Multi-Agent Routes**: Combined movie information and quotes, comprehensive actor profiles
 
 ## 🎯 AI Tools & Capabilities
 
@@ -233,20 +243,22 @@ Movie Agent > You: /exit     # Quit application
     ```bash
     # Install and setup
     npm install
-    export GEMINI_API_KEY=your_key
-    export TMDB_API_KEY=your_key
+    cp .env_example .env
+    # Edit .env with your API keys
 
-    # Run the movie agent
+    # Start all agents (in separate terminals)
     npm run agents:movie-agent
+    npm run agents:quotes-agent
+    npm run agents:multiagent
 
     # In new terminal, start CLI
-    npm run a2a:cli
+    npm run a2a:cli:multiagent
     ```
 
 3. **Try These Examples**:
-what are the most popular movies with Leonardo DiCaprio
-    - "What's the plot of The Dark Knight?"
-    - "Tell me about Christopher Nolan's films"
+    - "What are the most popular movies with Leonardo DiCaprio?"
+    - "Tell me about The Dark Knight and give me quotes from it"
+    - "What are Christopher Nolan's films and famous quotes from them?"
     - "Give me quotes from Star Wars"
 
 ## 📝 License

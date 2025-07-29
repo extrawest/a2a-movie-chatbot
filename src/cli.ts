@@ -2,6 +2,10 @@
 
 import readline from 'node:readline';
 import crypto from 'node:crypto';
+import dotenv from 'dotenv';
+
+// Load environment variables from .env file
+dotenv.config();
 
 import {
     // Specific Params/Payload types used by the CLI
@@ -47,7 +51,7 @@ function generateId(): string {
 // --- State ---
 let currentTaskId: string | undefined = undefined; // Initialize as undefined
 let currentContextId: string | undefined = undefined; // Initialize as undefined
-const serverUrl = process.argv[2] || 'http://localhost:41241'; // Agent's base URL
+const serverUrl = process.argv[2] || 'http://localhost:41240'; // Multiagent Coordinator's base URL
 const client = new A2AClient(serverUrl);
 let agentName = 'Agent'; // Default, try to get from agent card later
 
