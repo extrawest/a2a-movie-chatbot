@@ -1,5 +1,7 @@
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid'; // For generating unique IDs
+import dotenv from 'dotenv';
+dotenv.config();
 
 import {
     AgentCard,
@@ -20,7 +22,7 @@ import {
 } from '@a2a-js/sdk/server';
 import { MessageData } from 'genkit';
 import { ai } from './genkit.js';
-import { searchMovies, searchPeople, searchQuotes } from './tools.js';
+import { searchMovies, searchPeople } from './tools.js';
 
 if (!process.env.GEMINI_API_KEY || !process.env.TMDB_API_KEY) {
     console.error(
@@ -173,7 +175,7 @@ class MovieAgentExecutor implements AgentExecutor {
                 { goal: goal, now: new Date().toISOString() },
                 {
                     messages,
-                    tools: [searchMovies, searchPeople, searchQuotes],
+                    tools: [searchMovies, searchPeople],
                 }
             );
 
@@ -291,8 +293,8 @@ const movieAgentCard: AgentCard = {
     // Adjust the base URL and port as needed. /a2a is the default base in A2AExpressApp
     url: 'http://localhost:41241/', // Example: if baseUrl in A2AExpressApp
     provider: {
-        organization: 'A2A Samples',
-        url: 'https://example.com/a2a-samples', // Added provider URL
+        organization: 'Local Development',
+        url: 'http://localhost:41241', // Points to this agent's URL
     },
     version: '0.0.2', // Incremented version
     capabilities: {
@@ -343,7 +345,7 @@ async function main() {
 
     // 4. Create and setup A2AExpressApp
     const appBuilder = new A2AExpressApp(requestHandler);
-    const expressApp = appBuilder.setupRoutes(express());
+    const expressApp = appBuilder.setupRoutes(express() as any);
 
     // 5. Start the server
     const PORT = process.env.PORT || 41241;
