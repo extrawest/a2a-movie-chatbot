@@ -4,13 +4,19 @@
     "main": "dist/index.js",
     "type": "module",
     "devDependencies": {
+        "@types/dotenv": "^6.1.1",
         "@types/node": "^22.13.14",
         "tsx": "^4.19.3",
         "typescript": "^5.8.2"
     },
     "scripts": {
         "a2a:cli": "npx tsx src/cli.ts",
-        "agents:movie-agent": "npx tsx src/agents/movie-agent/index.ts"
+        "a2a:cli:movie": "npx tsx src/cli.ts http://localhost:41241",
+        "a2a:cli:quotes": "npx tsx src/cli.ts http://localhost:41242",
+        "a2a:cli:multiagent": "npx tsx src/cli.ts http://localhost:41240",
+        "agents:movie-agent": "npx tsx src/agents/movie-agent/index.ts",
+        "agents:quotes-agent": "npx tsx src/agents/quotes-agent/index.ts",
+        "agents:multiagent": "npx tsx src/agents/multiagent/index.ts"
     },
     "dependencies": {
         "@a2a-js/sdk": "^0.2.4",
@@ -20,6 +26,7 @@
         "@types/express": "^5.0.1",
         "body-parser": "^2.2.0",
         "cors": "^2.8.5",
+        "dotenv": "^17.2.1",
         "express": "^4.21.2",
         "genkit": "^1.8.0"
     },
