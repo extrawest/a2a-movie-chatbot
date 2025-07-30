@@ -1,6 +1,7 @@
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid'; // For generating unique IDs
 import dotenv from 'dotenv';
+
 dotenv.config();
 
 import {
@@ -21,8 +22,8 @@ import {
     DefaultRequestHandler,
 } from '@a2a-js/sdk/server';
 import { MessageData } from 'genkit';
-import { ai } from './genkit.js';
-import { searchMovies, searchPeople } from './tools.js';
+import { ai, z } from './genkit.js';
+import { MovieMCPClient } from './mcp-client.js';
 
 if (!process.env.GEMINI_API_KEY || !process.env.TMDB_API_KEY) {
     console.error(
@@ -31,11 +32,56 @@ if (!process.env.GEMINI_API_KEY || !process.env.TMDB_API_KEY) {
     process.exit(1);
 }
 
-// Simple store for contexts
 const contexts: Map<string, Message[]> = new Map();
 
-// Load the Genkit prompt
+let mcpClient: MovieMCPClient | null = null;
+
 const movieAgentPrompt = ai.prompt('movie_agent');
+
+// Create MCP-compatible tools
+const searchMovies = ai.defineTool(
+    {
+        name: 'searchMovies',
+        description: 'search TMDB for movies by title',
+        inputSchema: z.object({
+            query: z.string(),
+        }),
+    },
+    async ({ query }) => {
+        if (!mcpClient) {
+            throw new Error('MCP client not initialized');
+        }
+        try {
+            const result = await mcpClient.searchMovies(query);
+            return JSON.parse(result.content[0].text);
+        } catch (error: any) {
+            console.error('Error calling MCP searchMovies:', error);
+            throw error;
+        }
+    }
+);
+
+const searchPeople = ai.defineTool(
+    {
+        name: 'searchPeople',
+        description: 'search TMDB for people by name',
+        inputSchema: z.object({
+            query: z.string(),
+        }),
+    },
+    async ({ query }) => {
+        if (!mcpClient) {
+            throw new Error('MCP client not initialized');
+        }
+        try {
+            const result = await mcpClient.searchPeople(query);
+            return JSON.parse(result.content[0].text);
+        } catch (error: any) {
+            console.error('Error calling MCP searchPeople:', error);
+            throw error;
+        }
+    }
+);
 
 /**
  * MovieAgentExecutor implements the agent's core logic.
@@ -330,24 +376,29 @@ const movieAgentCard: AgentCard = {
 };
 
 async function main() {
-    // 1. Create TaskStore
+    // 1. Initialize MCP client
+    mcpClient = new MovieMCPClient();
+    await mcpClient.connect();
+    console.log('[MovieAgent] MCP client connected');
+
+    // 2. Create TaskStore
     const taskStore: TaskStore = new InMemoryTaskStore();
 
-    // 2. Create AgentExecutor
+    // 3. Create AgentExecutor
     const agentExecutor: AgentExecutor = new MovieAgentExecutor();
 
-    // 3. Create DefaultRequestHandler
+    // 4. Create DefaultRequestHandler
     const requestHandler = new DefaultRequestHandler(
         movieAgentCard,
         taskStore,
         agentExecutor
     );
 
-    // 4. Create and setup A2AExpressApp
+    // 5. Create and setup A2AExpressApp
     const appBuilder = new A2AExpressApp(requestHandler);
     const expressApp = appBuilder.setupRoutes(express() as any);
 
-    // 5. Start the server
+    // 6. Start the server
     const PORT = process.env.PORT || 41241;
     expressApp.listen(PORT, () => {
         console.log(
@@ -357,6 +408,15 @@ async function main() {
             `[MovieAgent] Agent Card: http://localhost:${PORT}/.well-known/agent.json`
         );
         console.log('[MovieAgent] Press Ctrl+C to stop the server');
+    });
+
+    // Handle cleanup
+    process.on('SIGINT', () => {
+        console.log('[MovieAgent] Shutting down...');
+        if (mcpClient) {
+            mcpClient.disconnect();
+        }
+        process.exit(0);
     });
 }
 
