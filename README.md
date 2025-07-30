@@ -16,6 +16,7 @@ A sophisticated multi-agent system built using the Agent-to-Agent (A2A) protocol
 -   **Dedicated Quote Agent**: Specialized agent for contextual movie quotes from extensive database
 -   **Smart Request Routing**: Multiagent coordinator that intelligently routes requests to appropriate agents
 -   **A2A Protocol Implementation**: Modern agent-to-agent communication protocol
+-   **MCP Protocol Support**: Model Context Protocol servers and clients for standardized tool access
 -   **Streaming Responses**: Real-time message streaming for immediate feedback
 -   **Context Management**: Persistent conversation context across multiple interactions
 -   **Command-Line Interface**: Terminal-based chat client for easy interaction with any agent
@@ -36,6 +37,7 @@ This multi-agent system consists of three specialized agents:
 -   **Node.js**: Runtime environment with ES modules
 -   **Google Genkit**: AI framework with Gemini 2.0 Flash model
 -   **A2A SDK**: Agent-to-Agent protocol implementation
+-   **MCP SDK**: Model Context Protocol for standardized tool access
 -   **TMDB API**: The Movie Database integration for film data
 -   **Quote API**: Movie quotes from pythonanywhere.com
 
@@ -46,6 +48,55 @@ This multi-agent system consists of three specialized agents:
 -   **Streaming Processing**: Real-time response generation
 -   **Context Awareness**: Multi-turn conversation handling
 -   **Tool Integration**: Parallel function execution capabilities
+
+## 🔗 Model Context Protocol (MCP) Integration
+
+This project implements the **Model Context Protocol (MCP)**, a standardized protocol for connecting AI applications with external tools and data sources. MCP enables secure, controlled access to agent capabilities through a unified interface.
+
+### MCP Architecture
+
+Each agent provides both **MCP Server** and **MCP Client** implementations:
+
+-   **MCP Servers**: Expose agent tools as standardized MCP resources that other applications can discover and use
+-   **MCP Clients**: Connect to MCP servers to access remote tools and capabilities
+
+### Available MCP Servers
+
+#### Movie Agent MCP Server
+
+-   **Server Name**: `movie-mcp-server`
+-   **Available Tools**:
+    -   `searchMovies(query: string)` - Search TMDB database for movies by title
+    -   `searchPeople(query: string)` - Find actors, directors, and film professionals
+-   **Transport**: stdio (standard input/output)
+-   **Data Sources**: TMDB API integration
+
+#### Quotes Agent MCP Server
+
+-   **Server Name**: `quotes-mcp-server`
+-   **Available Tools**:
+    -   `searchQuotes(query: string)` - Search for movie quotes by title or actor name
+-   **Transport**: stdio (standard input/output)
+-   **Data Sources**: Movie quotes API
+
+### MCP Usage Examples
+
+Start MCP servers independently for integration with other applications:
+
+```bash
+# Start Movie Agent MCP Server
+npm run mcp:movie-server
+
+# Start Quotes Agent MCP Server
+npm run mcp:quotes-server
+```
+
+### MCP Integration Benefits
+
+-   **Standardized Interface**: Consistent tool discovery and execution across different applications
+-   **Secure Access**: Controlled access to agent capabilities through defined schemas
+-   **Tool Composability**: Mix and match tools from different agents in external applications
+-   **Protocol Compliance**: Full compatibility with MCP-enabled applications and IDEs
 
 ## 📋 Prerequisites
 
@@ -124,15 +175,18 @@ This multi-agent system consists of three specialized agents:
 │ │ │ ├── genkit.ts               # Google Genkit AI configuration
 │ │ │ ├── tools.ts                # Movie & people search tools
 │ │ │ ├── tmdb.ts                 # TMDB API integration
+│ │ │ ├── mcp-server.ts           # MCP server for movie tools
+│ │ │ ├── mcp-client.ts           # MCP client for external integration
 │ │ │ ├── movie_agent.prompt      # Movie agent prompt template
 │ │ ├── quotes-agent/
 │ │ │ ├── index.ts                # Quotes agent server implementation
 │ │ │ ├── genkit.ts               # Google Genkit AI configuration
 │ │ │ ├── tools.ts                # Quote search tools
+│ │ │ ├── mcp-server.ts           # MCP server for quote tools
+│ │ │ ├── mcp-client.ts           # MCP client for external integration
 │ │ │ ├── quotes_agent.prompt     # Quotes agent prompt template
 │ │ ├── multiagent/
 │ │ │ ├── index.ts                # Multiagent coordinator implementation
-│ │ └── README.md                 # Agents overview
 │ └── cli.ts                      # Command-line interface client
 ├── .env_example                  # Environment variables template
 ├── package.json                  # Node.js dependencies and scripts
@@ -183,6 +237,35 @@ This multi-agent system consists of three specialized agents:
 -   **Quotes Agent**: `http://localhost:41242`
 -   **Multiagent Coordinator**: `http://localhost:41240`
 
+### MCP Server Endpoints
+
+-   **Movie Agent MCP Server**: stdio transport (run via `npm run mcp:movie-server`)
+-   **Quotes Agent MCP Server**: stdio transport (run via `npm run mcp:quotes-server`)
+
+#### MCP Tool Capabilities
+
+```json
+// Movie Agent MCP Tools
+{
+  "searchMovies": {
+    "description": "Search TMDB for movies by title",
+    "parameters": { "query": "string" }
+  },
+  "searchPeople": {
+    "description": "Search TMDB for people by name",
+    "parameters": { "query": "string" }
+  }
+}
+
+// Quotes Agent MCP Tools
+{
+  "searchQuotes": {
+    "description": "Search for movie quotes by title or actor",
+    "parameters": { "query": "string" }
+  }
+}
+```
+
 ## 💬 Usage Examples
 
 ### Command Line Interface
@@ -203,6 +286,39 @@ Multiagent > You: What are Christopher Nolan's best movies and famous quotes fro
 # Special commands (all agents)
 Agent > You: /new      # Start new session
 Agent > You: /exit     # Quit application
+```
+
+### MCP Server Usage
+
+```bash
+# Start MCP servers for external integration
+npm run mcp:movie-server    # Movie tools via MCP protocol
+npm run mcp:quotes-server   # Quote tools via MCP protocol
+
+# These servers can be integrated with:
+# - Claude Desktop and other MCP-compatible applications
+# - Custom applications using MCP SDK
+# - Development tools and IDEs with MCP support
+```
+
+### MCP Tool Integration Examples
+
+```javascript
+// Example: Using Movie MCP Client
+import { MovieMCPClient } from './src/agents/movie-agent/mcp-client.js';
+
+const client = new MovieMCPClient();
+await client.connect();
+
+// Search for movies
+const movieResult = await client.searchMovies('The Dark Knight');
+console.log(movieResult);
+
+// Search for people
+const peopleResult = await client.searchPeople('Christopher Nolan');
+console.log(peopleResult);
+
+client.disconnect();
 ```
 
 ### Request Routing Examples
