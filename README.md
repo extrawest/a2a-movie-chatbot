@@ -8,6 +8,10 @@
 
 A sophisticated multi-agent system built using the Agent-to-Agent (A2A) protocol with Google's Genkit AI framework. This project demonstrates advanced AI agent coordination capabilities with specialized agents for movie information retrieval, quote generation, and intelligent request routing through a multiagent coordinator.
 
+
+https://github.com/user-attachments/assets/c14d70f3-2ff2-45fa-8b6d-a15e119ccce5
+
+
 ## 🚀 Features
 
 -   **Multi-Agent Architecture**: Coordinated system with specialized agents for different tasks
