@@ -2,7 +2,6 @@ import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
 
-// Load environment variables from .env file
 dotenv.config();
 
 import {
@@ -23,14 +22,39 @@ import {
     DefaultRequestHandler,
 } from '@a2a-js/sdk/server';
 import { MessageData } from 'genkit';
-import { ai } from './genkit.js';
-import { searchQuotes } from './tools.js';
+import { ai, z } from './genkit.js';
+import { QuotesMCPClient } from './mcp-client.js';
 
-// Simple store for contexts
 const contexts: Map<string, Message[]> = new Map();
 
-// Load the Genkit prompt
+let mcpClient: QuotesMCPClient | null = null;
+
 const quotesAgentPrompt = ai.prompt('quotes_agent');
+
+const searchQuotes = ai.defineTool(
+    {
+        name: 'searchQuotes',
+        description:
+            'search for movie quotes related to a movie title or actor name',
+        inputSchema: z.object({
+            query: z
+                .string()
+                .describe('Movie title or actor name to search for quotes'),
+        }),
+    },
+    async ({ query }) => {
+        if (!mcpClient) {
+            throw new Error('MCP client not initialized');
+        }
+        try {
+            const result = await mcpClient.searchQuotes(query);
+            return JSON.parse(result.content[0].text);
+        } catch (error: any) {
+            console.error('Error calling MCP searchQuotes:', error);
+            throw error;
+        }
+    }
+);
 
 /**
  * QuotesAgentExecutor implements the agent's core logic.
@@ -318,6 +342,10 @@ const quotesAgentCard: AgentCard = {
 };
 
 async function main() {
+    mcpClient = new QuotesMCPClient();
+    await mcpClient.connect();
+    console.log('[QuotesAgent] MCP client connected');
+
     const taskStore: TaskStore = new InMemoryTaskStore();
     const agentExecutor: AgentExecutor = new QuotesAgentExecutor();
     const requestHandler = new DefaultRequestHandler(
@@ -336,6 +364,14 @@ async function main() {
             `[QuotesAgent] Agent Card: http://localhost:${PORT}/.well-known/agent.json`
         );
         console.log('[QuotesAgent] Press Ctrl+C to stop the server');
+    });
+
+    process.on('SIGINT', () => {
+        console.log('[QuotesAgent] Shutting down...');
+        if (mcpClient) {
+            mcpClient.disconnect();
+        }
+        process.exit(0);
     });
 }
 
