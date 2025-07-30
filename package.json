@@ -16,12 +16,15 @@
         "a2a:cli:multiagent": "npx tsx src/cli.ts http://localhost:41240",
         "agents:movie-agent": "npx tsx src/agents/movie-agent/index.ts",
         "agents:quotes-agent": "npx tsx src/agents/quotes-agent/index.ts",
-        "agents:multiagent": "npx tsx src/agents/multiagent/index.ts"
+        "agents:multiagent": "npx tsx src/agents/multiagent/index.ts",
+        "mcp:movie-server": "npx tsx src/agents/movie-agent/mcp-server.ts",
+        "mcp:quotes-server": "npx tsx src/agents/quotes-agent/mcp-server.ts"
     },
     "dependencies": {
         "@a2a-js/sdk": "^0.2.4",
         "@genkit-ai/googleai": "^1.8.0",
         "@genkit-ai/vertexai": "^1.8.0",
+        "@modelcontextprotocol/sdk": "^1.0.3",
         "@types/cors": "^2.8.17",
         "@types/express": "^5.0.1",
         "body-parser": "^2.2.0",
